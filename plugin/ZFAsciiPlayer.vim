@@ -5,7 +5,7 @@ function! CygpathFix_absPath(path)
     if !exists('g:CygpathFix_isCygwin')
         let g:CygpathFix_isCygwin = has('win32unix') && executable('cygpath')
     endif
-    let path = fnamemodify(a:path, ':p')
+    let path = substitute(fnamemodify(a:path, ':p'), '\\', '/', 'g')
     if g:CygpathFix_isCygwin
         if 0 " cygpath is really slow
             let path = substitute(system('cygpath -m "' . path . '"'), '[\r\n]', '', 'g')
