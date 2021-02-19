@@ -21,7 +21,7 @@ Plug 'ZSaberLv0/ZFVimAsciiPlayer'
 this repo only holds basic API,
 you must also install extensions to support actual file types:
 
-* `Plug 'ZSaberLv0/ZFVimAsciiPlayer_image'` : image viewer
+* `Plug 'ZSaberLv0/ZFVimAsciiPlayer_image'` : image/gif viewer
 
     * you need `python` and `pip install img2txt.py` to make this extension to work,
         see [ZFVimAsciiPlayer_image](https://github.com/ZSaberLv0/ZFVimAsciiPlayer_image)
