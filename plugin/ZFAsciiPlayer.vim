@@ -24,6 +24,16 @@ function! CygpathFix_absPath(path)
     return substitute(substitute(path, '\\', '/', 'g'), '\%(\/\)\@<!\/\+$', '', '') " (?<!\/)\/+$
 endfunction
 
+function! ZF_AsciiPlayer_log(msg)
+    echomsg a:msg
+    if get(g:, 'ZF_AsciiPlayer_logEnable', 0)
+        if !exists('g:ZF_AsciiPlayer_logList')
+            let g:ZF_AsciiPlayer_logList = []
+        endif
+        call add(g:ZF_AsciiPlayer_logList, a:msg)
+    endif
+endfunction
+
 " params:
 "   file
 function! ZFAsciiPlayer(...)
@@ -31,7 +41,7 @@ function! ZFAsciiPlayer(...)
     if empty(file)
         let file = expand('%')
         if empty(file)
-            echomsg '[ZFAsciiPlayer] no file'
+            call ZF_AsciiPlayer_log('[ZFAsciiPlayer] no file')
             return 0
         endif
     else
@@ -41,7 +51,7 @@ function! ZFAsciiPlayer(...)
     if filereadable(file)
         execute 'edit! ' . substitute(file, ' ', '\\ ', 'g')
     else
-        echomsg '[ZFAsciiPlayer] unable to open file: ' . file
+        call ZF_AsciiPlayer_log('[ZFAsciiPlayer] unable to open file: ' . file)
         return 0
     endif
 
@@ -63,7 +73,7 @@ function! ZFAsciiPlayer(...)
         let maxHeight -= 1
     endif
     if maxWidth <= 0 || maxHeight <= 0
-        echomsg '[ZFAsciiPlayer] window too small: (' . maxWidth . ',' . maxHeight . ')'
+        call ZF_AsciiPlayer_log('[ZFAsciiPlayer] window too small: (' . maxWidth . ',' . maxHeight . ')')
         return 0
     endif
 
@@ -74,15 +84,20 @@ function! ZFAsciiPlayer(...)
                 \   'heightScale' : get(g:, 'ZFAsciiPlayer_heightScale', 0.52),
                 \ })
     if empty(state) || state['totalFrame'] == 0
-        echomsg '[ZFAsciiPlayer] unable to parse file: ' . file
+        call ZF_AsciiPlayer_log('[ZFAsciiPlayer] unable to parse file: ' . file)
         return 0
     endif
+
+    augroup ZF_AsciiPlayer_resetDiff_augroup
+        autocmd!
+        autocmd DiffUpdated <buffer> diffoff
+    augroup END
+
     if state['totalFrame'] == 1 || !has('timers')
         call ZF_AsciiPlayer_draw(ZF_AsciiPlayer_converterFrame(state, 0))
-        return 1
+    else
+        call s:aniStart(state)
     endif
-
-    call s:aniStart(state)
     return 1
 endfunction
 
