@@ -3,7 +3,7 @@
 " * bg
 " * fg
 " * White/Black/Red/..., :h cterm-colors
-" * 0~255
+" * 0~255 (must be number type)
 function! ZF_AsciiPlayer_genHighlight(bg, fg)
     let hlGroup = 'ZFAsciiPlayerHL_' . a:bg . '_' . a:fg
     if hlID(hlGroup) != 0
@@ -22,7 +22,7 @@ function! ZF_AsciiPlayer_genHighlight(bg, fg)
         let guibg = a:bg
         let ctermbg = a:bg
     else
-        if a:bg >= 0 && a:bg <= 255
+        if type(a:bg) == type(0) && a:bg >= 0 && a:bg <= 255
             let guibg = g:ZFAsciiPlayerHLMap[a:bg][colorIndex]
             let ctermbg = a:bg
         else
@@ -40,7 +40,7 @@ function! ZF_AsciiPlayer_genHighlight(bg, fg)
         let guifg = a:fg
         let ctermfg = a:fg
     else
-        if a:fg >= 0 && a:fg <= 255
+        if type(a:fg) == type(0) && a:fg >= 0 && a:fg <= 255
             let guifg = g:ZFAsciiPlayerHLMap[a:fg][colorIndex]
             let ctermfg = a:fg
         else

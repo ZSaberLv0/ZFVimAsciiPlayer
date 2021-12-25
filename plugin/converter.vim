@@ -37,10 +37,8 @@ function! ZF_AsciiPlayer_converterInit(params)
     return state
 endfunction
 
-" return frame data
-"
-" type=hlCmds: {
-"   'type' : 'hlCmds',
+" return frame data: {
+"   'time' : 'frame time, 0 to use global fps',
 "   'lines' : [],
 "   'hlCmds' : [
 "     {
@@ -51,11 +49,6 @@ endfunction
 "     },
 "     ...
 "   ],
-" }
-"
-" type=terminalHL: {
-"   'type' : 'terminalHL',
-"   'ascii' : 'terminal ascii with or without highlight',
 " }
 function! ZF_AsciiPlayer_converterFrame(state, frame)
     return a:state['_impl_frame'](a:state, a:frame)

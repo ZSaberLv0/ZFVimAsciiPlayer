@@ -110,7 +110,7 @@ function! s:aniStart(state)
     autocmd BufDelete,BufLeave,BufWinLeave,BufHidden,WinLeave <buffer> call s:aniNextFrameStop()
     execute 'augroup END'
 
-    let fpsDefault = 16
+    let fpsDefault = 8
     let fps = get(a:state, 'fps', -1)
     if fps <= 0
         let fps = get(g:, 'ZFAsciiPlayer_fps', fpsDefault)
@@ -162,7 +162,7 @@ function! s:aniNextFrame()
         let frame = 0
     endif
     let b:ZFAsciiPlayer_aniTask['frame'] = frame
-    if totalFrame <= 100
+    if totalFrame > 0 && totalFrame <= 100
         let frameDataCaches = b:ZFAsciiPlayer_aniTask['frameDataCaches']
         if frame < len(frameDataCaches)
             let frameData = frameDataCaches[frame]
@@ -175,7 +175,11 @@ function! s:aniNextFrame()
     endif
     call ZF_AsciiPlayer_draw(frameData)
 
-    let b:ZFAsciiPlayer_aniTask['timerId'] = s:timer_start(b:ZFAsciiPlayer_aniTask['frameTime'], function('s:aniTimerCallback'), [bufnr()])
+    let frameTime = get(frameData, 'time', b:ZFAsciiPlayer_aniTask['frameTime'])
+    if frameTime <= 0
+        let frameTime = b:ZFAsciiPlayer_aniTask['frameTime']
+    endif
+    let b:ZFAsciiPlayer_aniTask['timerId'] = s:timer_start(frameTime, function('s:aniTimerCallback'), [bufnr()])
 endfunction
 
 function! s:aniNextFrameStop()

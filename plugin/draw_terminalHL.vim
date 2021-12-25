@@ -12,7 +12,18 @@
 "   ],
 " }
 function! ZF_AsciiPlayer_terminalHLToHLCmd(ascii)
-    return s:toHLCmds(a:ascii)
+    if exists('g:ZFAsciiPlayerLog')
+        let _start_time = reltime()
+        let ret = s:toHLCmds(a:ascii)
+        call add(g:ZFAsciiPlayerLog,
+                    \   'terminalHL parse used time: '
+                    \   . float2nr(reltimefloat(reltime(_start_time, reltime())) * 1000)
+                    \   . ', len: ' . len(a:ascii)
+                    \ )
+        return ret
+    else
+        return s:toHLCmds(a:ascii)
+    endif
 endfunction
 
 function! s:toHLCmds(ascii)
@@ -87,75 +98,83 @@ endfunction
 " return: [
 "   {
 "     'text' : '',
-"     'bg' : 'NONE, 0~255',
-"     'fg' : 'NONE, 0~255',
+"     'bg' : 'NONE or 0~255',
+"     'fg' : 'NONE or 0~255',
 "   },
 " ]
 function! ZF_AsciiPlayer_terminalHLParse(line)
+    " note:
+    "     ^[        => means <esc>, which is 0x1b
+    "     N         => text mode ctrl, 0~9
+    "     CCC       => color code, 0~255
+    "
+    " list of things to process
+    "     ^[[K              => simply remove
+    "     ^[[0m             => reset bg and fg to NONE
+    "     ^[[49m            => reset bg to NONE
+    "     ^[[39m            => reset fg to NONE
+    "     ^[[48;N;CCCm      => set bg to CCC
+    "     ^[[38;N;CCCm      => set fg to CCC
+
     " \C\%x1b\[K
     let line = substitute(a:line, '\C\%x1b\[K', '', 'g')
-
     let lineInfo = []
-    let bg = -1
-    let fg = -1
-    while 1
-        let pos = match(line, '\%x1b')
-        if pos < 0
-            if len(line) > 0
-                call add(lineInfo, {
-                            \   'text' : line,
-                            \   'bg' : bg,
-                            \   'fg' : fg,
-                            \ })
-            endif
-            break
-        elseif pos > 0
+    let token = nr2char(27) " 0x1b
+    let pStart = 0
+    let pL = 0
+    let pR = 0
+    let pE = strlen(line)
+    let bg = 'NONE'
+    let fg = 'NONE'
+
+    while pL < pE
+        while pL < pE && line[pL] != token
+            let pL += 1
+        endwhile
+        if pL+1 >= pE || line[pL+1] != '[' | break | endif
+        if pL > pStart
             call add(lineInfo, {
-                        \   'text' : strpart(line, 0, pos),
+                        \   'text' : strpart(line, pStart, pL - pStart),
                         \   'bg' : bg,
                         \   'fg' : fg,
                         \ })
-            let line = strpart(line, pos)
         endif
 
-        " \C\%x1b\[[0-9a-zA-Z;]+[mC]
-        let pattern = matchstr(line, '\C\%x1b\[[0-9a-zA-Z;]\+[mC]')
-        if len(pattern) == 0
-            let line = substitute(line, '\%x1b', '', '')
+        let pL = pL + 2
+        let pR = pL
+        while pR < pE
+                    \ && line[pR] != 'K'
+                    \ && line[pR] != 'm'
+            let pR += 1
+        endwhile
+        if pR >= pE | break | endif
+
+        let patterns = split(strpart(line, pL, pR - pL), ';')
+        let pL = pR + 1
+        let pStart = pL
+
+        let patternCount = len(patterns)
+        if patternCount < 1
             continue
         endif
-
-        if match(pattern, '\C^\%x1b\[\([0-9]\+\)C') == 0
-            " \C^\%x1b\[([0-9]+)C
-            call add(lineInfo, {
-                        \   'text' : repeat(' ', str2nr(substitute(pattern, '\C^\%x1b\[\([0-9]\+\)C', '\1', ''))),
-                        \   'bg' : 'NONE',
-                        \   'fg' : 'NONE',
-                        \ })
-            let line = strpart(line, len(pattern))
-        elseif match(pattern, '\C^\%x1b\[0m$') == 0
-            let bg = -1
-            let fg = -1
-            let line = strpart(line, len(pattern))
-        elseif match(pattern, '\C^\%x1b\[49m$') == 0
-            let bg = -1
-            let line = strpart(line, len(pattern))
-        elseif match(pattern, '\C^\%x1b\[39m$') == 0
-            let fg = -1
-            let line = strpart(line, len(pattern))
-        elseif match(pattern, '\C^\%x1b\[48;5;\([0-9]\+\)m$') == 0
-            " \C^\%x1b\[48;5;([0-9]+)m$
-            let bg = str2nr(substitute(pattern, '\C^\%x1b\[48;5;\([0-9]\+\)m$', '\1', ''))
-            let line = strpart(line, len(pattern))
-        elseif match(pattern, '\C^\%x1b\[38;5;\([0-9]\+\)m$') == 0
-            " \C^\%x1b\[38;5;([0-9]+)m$
-            let fg = str2nr(substitute(pattern, '\C^\%x1b\[38;5;\([0-9]\+\)m$', '\1', ''))
-            let line = strpart(line, len(pattern))
-        else
-            let line = substitute(line, '\%x1b', '', '')
-            continue
+        if patterns[0] == '0'
+            let bg = 'NONE'
+            let fg = 'NONE'
+        elseif patterns[0] == '49'
+            let bg = 'NONE'
+        elseif patterns[0] == '39'
+            let fg = 'NONE'
+        elseif patterns[0] == '48'
+            if patternCount >= 3
+                let bg = str2nr(patterns[2])
+            endif
+        elseif patterns[0] == '38'
+            if patternCount >= 3
+                let fg = str2nr(patterns[2])
+            endif
         endif
     endwhile
+
     return lineInfo
 endfunction
 

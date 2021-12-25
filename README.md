@@ -56,10 +56,8 @@ to write extensions:
     function! MyExt_converterInit(params)
     endfunction
 
-    " return frame data
-    "
-    " type=hlCmds: {
-    "   'type' : 'hlCmds',
+    " return frame data: {
+    "   'time' : 'frame time, 0 to use global fps',
     "   'lines' : [],
     "   'hlCmds' : [
     "     {
@@ -70,11 +68,6 @@ to write extensions:
     "     },
     "     ...
     "   ],
-    " }
-    "
-    " type=terminalHL: {
-    "   'type' : 'terminalHL',
-    "   'ascii' : 'terminal ascii with or without highlight',
     " }
     function! MyExt_converterFrame(state, frame)
     endfunction
