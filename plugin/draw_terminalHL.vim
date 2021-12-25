@@ -87,8 +87,8 @@ endfunction
 " return: [
 "   {
 "     'text' : '',
-"     'bg' : '-1, 0~255',
-"     'fg' : '-1, 0~255',
+"     'bg' : 'NONE, 0~255',
+"     'fg' : 'NONE, 0~255',
 "   },
 " ]
 function! ZF_AsciiPlayer_terminalHLParse(line)
@@ -129,8 +129,8 @@ function! ZF_AsciiPlayer_terminalHLParse(line)
             " \C^\%x1b\[([0-9]+)C
             call add(lineInfo, {
                         \   'text' : repeat(' ', str2nr(substitute(pattern, '\C^\%x1b\[\([0-9]\+\)C', '\1', ''))),
-                        \   'bg' : -1,
-                        \   'fg' : -1,
+                        \   'bg' : 'NONE',
+                        \   'fg' : 'NONE',
                         \ })
             let line = strpart(line, len(pattern))
         elseif match(pattern, '\C^\%x1b\[0m$') == 0

@@ -36,11 +36,7 @@ function! ZF_AsciiPlayer_redraw()
     call setline(1, w:ZFAsciiPlayer_frameDataCur['lines'])
     call clearmatches()
     for hlCmd in w:ZFAsciiPlayer_frameDataCur['hlCmds']
-        call matchadd(hlCmd['group'], ''
-                    \   . '\%' . hlCmd['iLine'] . 'l'
-                    \   . '\%>' . hlCmd['pos'] . 'c'
-                    \   . '\%<' . (hlCmd['pos'] + hlCmd['len'] + 1) . 'c'
-                    \ )
+        call s:hlCmd(hlCmd)
     endfor
 
     " for performance
@@ -53,7 +49,6 @@ function! ZF_AsciiPlayer_redraw()
         call setpos('.', oldPos)
     catch
     endtry
-    redraw
 
     " auto redraw since matchadd() affects to windows only
     execute 'augroup ZF_AsciiPlayer_draw_augroup_' . bufnr('%') . '_' . ZF_AsciiPlayer_win_getid()
@@ -63,6 +58,24 @@ function! ZF_AsciiPlayer_redraw()
     autocmd BufLeave,BufWinLeave,BufHidden <buffer> call ZF_AsciiPlayer_clear()
     execute 'augroup END'
 endfunction
+
+if exists('*matchaddpos')
+    function! s:hlCmd(hlCmd)
+        call matchaddpos(a:hlCmd['group'], [[
+                    \   a:hlCmd['iLine'],
+                    \   a:hlCmd['pos'],
+                    \   a:hlCmd['len'],
+                    \ ]])
+    endfunction
+else
+    function! s:hlCmd(hlCmd)
+        call matchadd(a:hlCmd['group'], ''
+                    \   . '\%' . a:hlCmd['iLine'] . 'l'
+                    \   . '\%>' . a:hlCmd['pos'] . 'c'
+                    \   . '\%<' . (a:hlCmd['pos'] + a:hlCmd['len'] + 1) . 'c'
+                    \ )
+    endfunction
+endif
 
 if exists('*win_getid')
     function! ZF_AsciiPlayer_win_getid()

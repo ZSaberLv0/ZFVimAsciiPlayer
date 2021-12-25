@@ -1,9 +1,13 @@
 
-let s:hlGroupCache = {}
+" bg/fg:
+" * bg
+" * fg
+" * White/Black/Red/..., :h cterm-colors
+" * 0~255
 function! ZF_AsciiPlayer_genHighlight(bg, fg)
-    let hlGroupCacheKey = a:bg . ':' . a:fg
-    if exists('s:hlGroupCache[hlGroupCacheKey]')
-        return s:hlGroupCache[hlGroupCacheKey]
+    let hlGroup = 'ZFAsciiPlayerHL_' . a:bg . '_' . a:fg
+    if hlID(hlGroup) != 0
+        return hlGroup
     endif
 
     let colorIndex = (&t_Co == 256 || has('gui') ? 0 : 1)
@@ -44,12 +48,10 @@ function! ZF_AsciiPlayer_genHighlight(bg, fg)
             let ctermfg = 'NONE'
         endif
     endif
-    let hlGroup = 'ZFAsciiPlayerHL_' . ctermbg . '_' . ctermfg
     execute 'highlight ' . hlGroup
                 \ . ' gui=NONE guibg=' . guibg . ' guifg=' . guifg
                 \ . ' cterm=NONE ctermbg=' . ctermbg . ' ctermfg=' . ctermfg
 
-    let s:hlGroupCache[hlGroupCacheKey] = hlGroup
     return hlGroup
 endfunction
 
