@@ -49,7 +49,7 @@ function! ZFAsciiPlayer(...)
         let file = substitute(file, '\\', '/', 'g')
     endif
     if filereadable(file)
-        execute 'edit! ' . substitute(file, ' ', '\\ ', 'g')
+        noautocmd execute 'noautocmd edit! ' . substitute(file, ' ', '\\ ', 'g')
     else
         call ZF_AsciiPlayer_log('[ZFAsciiPlayer] unable to open file: ' . file)
         return 0
