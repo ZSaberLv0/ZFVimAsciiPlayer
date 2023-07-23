@@ -59,6 +59,13 @@ function! ZF_AsciiPlayer_redraw()
     execute 'augroup END'
 endfunction
 
+function! ZF_AsciiPlayer_redraw_cleanup()
+    call s:cleanup()
+    if exists('b:ZFAsciiPlayer_frameData')
+        unlet b:ZFAsciiPlayer_frameData
+    endif
+endfunction
+
 if exists('*matchaddpos')
     function! s:hlCmd(hlCmd)
         call matchaddpos(a:hlCmd['group'], [[

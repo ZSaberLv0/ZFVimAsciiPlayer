@@ -37,6 +37,15 @@ endfunction
 " params:
 "   file
 function! ZFAsciiPlayer(...)
+    if !exists('b:ZFAsciiPlayer_frameData')
+        return ZFAsciiPlayerOn(get(a:, 1, ''))
+    else
+        call ZFAsciiPlayerOff()
+        return 0
+    endif
+endfunction
+
+function! ZFAsciiPlayerOn(...)
     let file = get(a:, 1, '')
     if empty(file)
         let file = expand('%')
@@ -50,6 +59,7 @@ function! ZFAsciiPlayer(...)
     endif
     if filereadable(file)
         noautocmd execute 'noautocmd edit! ' . substitute(file, ' ', '\\ ', 'g')
+        call ZFFilePostCleanup()
     else
         call ZF_AsciiPlayer_log('[ZFAsciiPlayer] unable to open file: ' . file)
         return 0
@@ -88,10 +98,10 @@ function! ZFAsciiPlayer(...)
         return 0
     endif
 
-    augroup ZF_AsciiPlayer_resetDiff_augroup
+    execute 'augroup ZF_AsciiPlayer_resetDiff_augroup_' . bufnr('%')
         autocmd!
         autocmd DiffUpdated <buffer> diffoff
-    augroup END
+    execute 'augroup END'
 
     if state['totalFrame'] == 1 || !has('timers')
         call ZF_AsciiPlayer_draw(ZF_AsciiPlayer_converterFrame(state, 0))
@@ -99,6 +109,16 @@ function! ZFAsciiPlayer(...)
         call s:aniStart(state)
     endif
     return 1
+endfunction
+
+function! ZFAsciiPlayerOff()
+    call s:aniStop()
+    execute 'augroup ZF_AsciiPlayer_resetDiff_augroup_' . bufnr('%')
+        autocmd!
+    execute 'augroup END'
+    call ZF_AsciiPlayer_redraw_cleanup()
+
+    noautocmd edit!
 endfunction
 
 function! s:aniStart(state)
