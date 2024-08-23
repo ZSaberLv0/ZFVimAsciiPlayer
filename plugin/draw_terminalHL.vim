@@ -26,6 +26,19 @@ function! ZF_AsciiPlayer_terminalHLToHLCmd(ascii)
     endif
 endfunction
 
+" lines:
+"   ^[[0m^[[48;N;CCCm
+"   ^[[NA^[[0m^[[48;N;CCCm
+"   ^[[0m^[[48;N;CCCm
+" return: [
+"   '^[[0m^[[48;N;CCCm',
+"   '^[[0m^[[48;N;CCCm',
+"   '^[[0m^[[48;N;CCCm',
+" ]
+function! ZF_AsciiPlayer_terminalHLParsePages(ascii)
+    return split(a:ascii, '\C\%x1b\[[0-9]\+A')
+endfunction
+
 function! s:toHLCmds(ascii)
     let hlCmds = []
     let lines = []
@@ -38,7 +51,7 @@ function! s:toHLCmds(ascii)
     endif
 
     " each lines
-    for line in split(a:ascii, '[\r\n]')
+    for line in split(a:ascii, '[\r\n]\+')
         let lineInfo = ZF_AsciiPlayer_terminalHLParse(line)
         call s:toHLCmds_line(iLine, lineInfo, lines, hlCmds)
         let iLine += 1
